@@ -36,7 +36,11 @@ def show_records():
 
 
 while True:
-    choice = int(input("1.Add or Update\n2.Show Records\n9.Quit\n"))
+    choice = None
+    try:
+        choice = int(input("1.Add or Update\n2.Show Records\n9.Quit\n"))
+    except ValueError:
+        pass
     if choice == 1:
         company = input("Enter company ('get out' to go back to menu)\n")
         if company == 'get out':
