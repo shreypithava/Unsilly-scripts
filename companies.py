@@ -38,7 +38,7 @@ def show_records():
 while True:
     choice = None
     try:
-        choice = int(input("1.Add or Update\n2.Show Records\n9.Quit\n"))
+        choice = int(input("1.Add or Update\n2.Show Records\n3.Which to apply\n9.Quit\n"))
     except ValueError:
         pass
     if choice == 1:
@@ -51,6 +51,14 @@ while True:
         db.close()
     elif choice == 2:
         show_records()
+    elif choice == 3:
+        month = int(input("How many months ago?\n"))
+        db2 = sqlite3.connect('companies.db')
+        records = db2.execute("""Select * from Companies
+        where epoch_time < ?""", (int(time.time()) - 2_592_000 * month,))
+        for record in records:
+            print(record)
+        db2.close()
     elif choice == 9:
         break
     else:
