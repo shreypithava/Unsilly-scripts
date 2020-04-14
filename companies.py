@@ -38,7 +38,8 @@ def show_records():
 while True:
     choice = None
     try:
-        choice = int(input("1.Add or Update\n2.Show Records\n3.Which to apply\n9.Quit\n"))
+        choice = int(input("""1.Add or Update\n2.Show Records\n3.Which to apply\n
+        9.Quit\n"""))
     except ValueError:
         pass
     if choice == 1:
