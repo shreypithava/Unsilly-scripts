@@ -2,65 +2,74 @@ import sqlite3
 import time
 
 
-def add(comp, db1):
-    try:
-        db1.execute('pragma foreign_keys = on')
-        db1.execute("""INSERT into Companies values
+class Companies:
+    def __init__(self):
+        self.__db = None
+
+    def start(self):
+        choice = 0
+        while True:
+            try:
+                choice = int(input("""1.Add or Update\n2.Show Records\n"""
+                                   """3.Which to apply\n9.Quit\n"""))
+            except ValueError:
+                pass
+            if choice == 1:
+                company = input("Enter company " +
+                                "('get out' to go back to menu)\n")
+                if company == 'get out':
+                    continue
+                self.__db = sqlite3.connect('companies.db')
+                self.__add(company)
+                self.__db.commit()
+                self.__db.close()
+            elif choice == 2:
+                self.__show_records()
+            elif choice == 3:
+                month = int(input("How many months ago?\n"))
+                self.__db = sqlite3.connect('companies.db')
+                records = self.__db.execute("""Select * from Companies
+                where epoch_time < ?""", (int(time.time()) - 2_592_000 * month,
+                                          ))
+                for record in records:
+                    print(record)
+                self.__db.close()
+            elif choice == 9:
+                break
+            else:
+                print('Enter correct response')
+
+    def __show_records(self):
+        specific = input("Specific?\n")
+        self.__db = sqlite3.connect('companies.db')
+        if specific.upper() == 'NO':
+            for com in self.__db.execute('''select * from Companies
+            order by CompanyID'''):
+                print(com)
+        else:
+            specific_company = self.__db.execute("""select * from Companies
+            where CompanyID = ?""", (specific,))
+            print(specific_company.fetchone())
+        self.__db.close()
+
+    def __add(self, company):
+        try:
+            self.__db.execute('pragma foreign_keys = on')
+            self.__db.execute("""INSERT into Companies values
         (?, datetime('now', 'localtime'), ?)""",
-                    (comp, int(time.time())))
-    except sqlite3.OperationalError:
-        print("SQL error, company not added")
-    except sqlite3.IntegrityError:
-        update(comp, db1)
-    else:
-        print("Insert successful")
+                              (company, int(time.time())))
+        except sqlite3.OperationalError:
+            print("SQL error, company not added")
+        except sqlite3.IntegrityError:
+            self.__update(company)
+        else:
+            print("Insert successful")
+
+    def __update(self, company):
+        self.__db.execute("""UPDATE Companies set Last_Updated = datetime('now', 'localtime'),
+        epoch_time = ? where CompanyID = ?""", (int(time.time()), company))
+        print("Update successful")
 
 
-def update(comp, db2):
-    db2.execute("""UPDATE Companies set Last_Updated = datetime('now', 'localtime'),
-    epoch_time = ? where CompanyID = ?""", (int(time.time()), comp))
-    print("Update successful")
-
-
-def show_records():
-    specific = input("Specific?\n")
-    db3 = sqlite3.connect('companies.db')
-    if specific.upper() == 'NO':
-        for com in db3.execute('select * from Companies order by CompanyID'):
-            print(com)
-    else:
-        specific_company = db3.execute("""select * from Companies
-        where CompanyID = ?""", (specific,))
-        print(specific_company.fetchone())
-    db3.close()
-
-
-while True:
-    choice = None
-    try:
-        choice = int(input("""1.Add or Update\n2.Show Records\n3.Which to apply\n
-        9.Quit\n"""))
-    except ValueError:
-        pass
-    if choice == 1:
-        company = input("Enter company ('get out' to go back to menu)\n")
-        if company == 'get out':
-            continue
-        db = sqlite3.connect('companies.db')
-        add(company, db)
-        db.commit()
-        db.close()
-    elif choice == 2:
-        show_records()
-    elif choice == 3:
-        month = int(input("How many months ago?\n"))
-        db2 = sqlite3.connect('companies.db')
-        records = db2.execute("""Select * from Companies
-        where epoch_time < ?""", (int(time.time()) - 2_592_000 * month,))
-        for record in records:
-            print(record)
-        db2.close()
-    elif choice == 9:
-        break
-    else:
-        print('Enter correct response')
+companies = Companies()
+companies.start()
