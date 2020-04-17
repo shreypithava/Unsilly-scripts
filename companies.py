@@ -10,7 +10,7 @@ class Companies:
         choice = 0
         while True:
             try:
-                choice = int(input("""1.Add or Update\n2.Show Records\n"""
+                choice = int(input("""\n1.Add or Update\n2.Show Records\n"""
                                    """3.Which to apply\n9.Quit\n"""))
             except ValueError:
                 pass
@@ -28,9 +28,10 @@ class Companies:
             elif choice == 3:
                 month = int(input("How many months ago?\n"))
                 self.__db = sqlite3.connect('companies.db')
-                records = self.__db.execute("""Select * from Companies
-                where epoch_time < ?""", (int(time.time()) - 2_592_000 * month,
-                                          ))
+                query = """Select * from Companies where epoch_time < {}
+                ORDER BY epoch_time DESC""".format(
+                    int(time.time()) - 2_592_000 * month)
+                records = self.__db.execute(query)
                 for record in records:
                     print(record)
                 self.__db.close()
@@ -44,12 +45,14 @@ class Companies:
         self.__db = sqlite3.connect('companies.db')
         if specific.upper() == 'NO':
             for com in self.__db.execute('''select * from Companies
-            order by CompanyID'''):
+            order by epoch_time DESC'''):
                 print(com)
         else:
-            specific_company = self.__db.execute("""select * from Companies
-            where CompanyID = ?""", (specific,))
-            print(specific_company.fetchone())
+            query = """SELECT * FROM Companies
+            WHERE CompanyID LIKE '%{}%'""".format(specific)
+            specific_companies = self.__db.execute(query)
+            for company in specific_companies:
+                print(company)
         self.__db.close()
 
     def __add(self, company):
