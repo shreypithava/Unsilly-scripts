@@ -26,11 +26,11 @@ class Companies:
             elif choice == 2:
                 self.__show_records()
             elif choice == 3:
-                month = int(input("How many months ago?\n"))
+                month = float(input("How many months ago?\n"))
                 self.__db = sqlite3.connect('companies.db')
                 query = """Select * from Companies where epoch_time < {}
                 ORDER BY epoch_time DESC""".format(
-                    int(time.time()) - 2_592_000 * month)
+                    int(time.time() - 2_592_000 * month))
                 records = self.__db.execute(query)
                 for record in records:
                     print(record)
