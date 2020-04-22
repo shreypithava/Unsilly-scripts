@@ -21,7 +21,7 @@ class Companies:
                     continue
                 self.__db = sqlite3.connect('companies.db')
                 self.__add(company)
-                self.__db.commit()
+                # self.__db.commit()
                 self.__db.close()
             elif choice == 2:
                 self.__show_records()
@@ -56,21 +56,23 @@ class Companies:
         self.__db.close()
 
     def __add(self, company):
+        notes = input("Enter notes\n")
         try:
             self.__db.execute('pragma foreign_keys = on')
             self.__db.execute("""INSERT into Companies values
-        (?, datetime('now', 'localtime'), ?)""",
-                              (company, int(time.time())))
+        (?, datetime('now', 'localtime'), ?, ?)""",
+                              (company, int(time.time()), notes))
         except sqlite3.OperationalError:
             print("SQL error, company not added")
         except sqlite3.IntegrityError:
-            self.__update(company)
+            self.__update(company, notes)
         else:
             print("Insert successful")
 
-    def __update(self, company):
+    def __update(self, company, new_notes):
         self.__db.execute("""UPDATE Companies set Last_Updated = datetime('now', 'localtime'),
-        epoch_time = ? where CompanyID = ?""", (int(time.time()), company))
+        epoch_time = ?, Notes = ? where CompanyID = ?""",
+                          (int(time.time()), company, new_notes))
         print("Update successful")
 
 
