@@ -21,7 +21,7 @@ class Companies:
                     continue
                 self.__db = sqlite3.connect('companies.db')
                 self.__add(company)
-                # self.__db.commit()
+                self.__db.commit()
                 self.__db.close()
             elif choice == 2:
                 self.__show_records()
@@ -44,9 +44,13 @@ class Companies:
         specific = input("Specific?\n")
         self.__db = sqlite3.connect('companies.db')
         if specific.upper() == 'NO':
-            for com in self.__db.execute('''select * from Companies
+            for company in self.__db.execute('''select * from Companies
             order by epoch_time DESC'''):
-                print(com)
+                print(company)
+        elif specific.isdigit():
+            for company in self.__db.execute('''select * from Companies
+            order by epoch_time DESC LIMIT ?''', (int(specific),)):
+                print(company)
         else:
             query = """SELECT * FROM Companies
             WHERE CompanyID LIKE '%{}%'""".format(specific)
