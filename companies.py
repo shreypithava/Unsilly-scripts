@@ -13,7 +13,7 @@ class Companies:
             try:
                 choice = int(input("""\n1.Add or Update\n2.Show Records\n"""
                                    """3.Which to apply\n4.Log rejection\n"""
-                                   """9.Quit\n"""))
+                                   """5.Commit\n9.Quit\n"""))
             except ValueError:
                 pass
             if choice == 1:
@@ -25,19 +25,24 @@ class Companies:
             elif choice == 2:
                 self.__show_records()
             elif choice == 3:
-                month = float(input("How many months ago?\n"))
-                query = """Select * from Companies where epoch_time < {}
-                ORDER BY epoch_time DESC""".format(
-                    int(time.time() - 2_592_000 * month))
-                for record in self.__db.execute(query):
-                    print(record)
+                self.__show_which_to_apply()
             elif choice == 4:
                 company_entered = input("Enter Company\n")
                 self.__show_records(company_entered)
+            elif choice == 5:
+                self.__commit()
             elif choice == 9:
                 break
             else:
                 print('Enter correct response')
+
+    def __show_which_to_apply(self):
+        month = float(input("How many months ago?\n"))
+        query = """Select * from Companies where epoch_time < {}
+                ORDER BY epoch_time DESC""".format(
+            int(time.time() - 2_592_000 * month))
+        for record in self.__db.execute(query):
+            print(record)
 
     def __show_records(self, specific=None):
         if specific is None:
@@ -64,7 +69,7 @@ class Companies:
         if count != 0:
             company = input("Enter existing company or new company\n")
         notes = input("Enter notes\n")
-        jobs_quantity = int(input("How many jobs?"))
+        jobs_quantity = int(input("How many jobs?\n"))
         try:
             self.__db.execute('pragma foreign_keys = on')
             self.__db.execute("""INSERT into Companies values
@@ -78,7 +83,6 @@ class Companies:
             self.__update(company, notes, only_notes)
         else:
             print("Insert successful")
-        self.__commit()
 
     def __update(self, company, new_notes, only_notes):
         if only_notes == 'n':
@@ -94,7 +98,6 @@ class Companies:
         rejection_quantity = int(input("How many rejections?\n"))
         self.__db.execute("""UPDATE Companies set
         Jobs = Jobs - ? where CompanyID = ?""", (rejection_quantity, company))
-        self.__commit()
 
     def __commit(self):
         self.__db.commit()
