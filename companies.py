@@ -47,27 +47,28 @@ class Companies:
     def __show_records(self, specific=None):
         if specific is None:
             specific = input("Specific?\n")
+        query = 'SELECT * FROM Companies'
         if specific.upper() == 'NO':
-            for company in self.__db.execute('''select * from Companies
-            order by epoch_time DESC'''):
-                print(company)
+            query += ' order by epoch_time DESC'
         elif specific.isdigit():
             print('\nShowing last {} companies\n'.format(specific))
-            for company in self.__db.execute('''select * from Companies
-            order by epoch_time DESC LIMIT ?''', (int(specific),)):
-                print(company)
+            query += ' order by epoch_time DESC LIMIT {}'.format(int(specific))
         else:
-            query = """SELECT * FROM Companies
-            WHERE CompanyID LIKE '%{}%'""".format(specific)
-            specific_companies = list(self.__db.execute(query))
-            for company in specific_companies:
-                print(company)
-            return len(specific_companies)
+            query += " WHERE CompanyID LIKE '%{}%'".format(specific)
+
+        list_of_companies = list(self.__db.execute(query))
+        for idx, company in enumerate(list_of_companies, 1):
+            print('{}.{}, {}, {}, {}'.format(idx, company[0],
+                                             company[1], company[3],
+                                             company[4]))
+        return list_of_companies
 
     def __add(self, company):
-        count = self.__show_records(company)
-        if count != 0:
-            company = input("Enter existing company or new company\n")
+        list_of_companies = self.__show_records(company)
+        if len(list_of_companies) != 0:
+            company_id = input("Enter company id or new company\n")
+            company = list_of_companies[int(company_id) - 1][0] \
+                if company_id.isdigit() else company_id
         notes = input("Enter notes\n")
         jobs_quantity = int(input("How many jobs?\n"))
         try:
@@ -100,12 +101,14 @@ class Companies:
         Jobs = Jobs - ? where CompanyID = ?""", (rejection_quantity, company))
 
     def __commit(self):
-        self.__db.commit()
+        pass
+        # self.__db.commit()
 
     def stop(self):
         self.__db.close()
 
 
-companies = Companies()
-companies.start()
-companies.stop()
+if __name__ == '__main__':
+    companies = Companies()
+    companies.start()
+    companies.stop()
