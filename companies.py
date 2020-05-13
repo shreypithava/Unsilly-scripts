@@ -6,6 +6,7 @@ class Companies:
 
     def __init__(self):
         self.__db = sqlite3.connect('companies.db')
+        self.__did_commit = False
 
     def start(self):
         choice = 0
@@ -29,6 +30,7 @@ class Companies:
             elif choice == 4:
                 company_entered = input("Enter Company\n")
                 self.__show_records(company_entered)
+                self.__log_rejection(company_entered)
             elif choice == 5:
                 self.__commit()
             elif choice == 9:
@@ -96,15 +98,20 @@ class Companies:
         print("Update successful")
 
     def __log_rejection(self, company):
+        list_of_companies = self.__show_records(company)
+        choice = int("Select which Company.\n")
         rejection_quantity = int(input("How many rejections?\n"))
         self.__db.execute("""UPDATE Companies set
-        Jobs = Jobs - ? where CompanyID = ?""", (rejection_quantity, company))
+        Jobs = Jobs - ? where CompanyID = ?""",
+                          (rejection_quantity, list_of_companies[choice - 1]))
 
     def __commit(self):
         pass
-        # self.__db.commit()
+        self.__db.commit()
 
     def stop(self):
+        if not self.__did_commit:
+            print("Not committed")
         self.__db.close()
 
 
