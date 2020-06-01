@@ -29,7 +29,6 @@ class Companies:
                 self.__show_which_to_apply()
             elif choice == 4:
                 company_entered = input("Enter Company\n")
-                self.__show_records(company_entered)
                 self.__log_rejection(company_entered)
             elif choice == 5:
                 self.__commit()
@@ -60,9 +59,12 @@ class Companies:
 
         list_of_companies = list(self.__db.execute(query))
         for idx, company in enumerate(list_of_companies, 1):
-            print('{}.{}, {}, {}, {}'.format(idx, company[0],
-                                             company[1], company[3],
-                                             company[4]))
+            print('{}.{}, {}, {}, {}, {}'.format(idx, company[0],
+                                                 company[1], company[3],
+                                                 company[4],
+                                                 'Can Track' if
+                                                 bool(company[5])
+                                                 else 'Cannot Track'))
         return list_of_companies
 
     def __add(self, company):
@@ -72,13 +74,14 @@ class Companies:
             company = list_of_companies[int(company_id) - 1][0] \
                 if company_id.isdigit() else company_id
         notes = input("Enter notes\n")
+        can_track = input("Can track application?\n")
         jobs_quantity = int(input("How many jobs?\n"))
         try:
             self.__db.execute('pragma foreign_keys = on')
             self.__db.execute("""INSERT into Companies values
-        (?, datetime('now', 'localtime'), ?, ?, ?)""",
+        (?, datetime('now', 'localtime'), ?, ?, ?, ?)""",
                               (company, int(time.time()),
-                               notes, jobs_quantity))
+                               notes, jobs_quantity, bool(can_track)))
         except sqlite3.OperationalError:
             print("SQL error, company not added")
         except sqlite3.IntegrityError:
@@ -99,14 +102,16 @@ class Companies:
 
     def __log_rejection(self, company):
         list_of_companies = self.__show_records(company)
-        choice = int("Select which Company.\n")
+
+        choice = int(input("Select which Company.\n"))
         rejection_quantity = int(input("How many rejections?\n"))
         self.__db.execute("""UPDATE Companies set
         Jobs = Jobs - ? where CompanyID = ?""",
-                          (rejection_quantity, list_of_companies[choice - 1]))
+                          (rejection_quantity,
+                           list_of_companies[choice - 1][0]))
 
     def __commit(self):
-        pass
+        self.__did_commit = True
         self.__db.commit()
 
     def stop(self):
